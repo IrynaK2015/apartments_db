@@ -33,6 +33,8 @@ public class Main {
 
         System.out.print("\n");
         showApartments(0);
+
+        dbObj.closeConnection();
     }
 
     private static void addApartment(int rooms, float square, String address, String district, int price) {
