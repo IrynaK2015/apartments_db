@@ -34,23 +34,19 @@ public class Db {
     public ArrayList<Apartment> getApartments(int rooms, float price) throws SQLException {
         ArrayList<Apartment> apartList = new ArrayList<>();
 
-        String sql = "SELECT * FROM " + DB_TABNAME + " WHERE 1=1";
-        if (rooms > 0)  sql = sql.concat(" AND rooms = ?");
-        if (price > 0)  sql = sql.concat(" AND price <= ?");
+        StringBuilder sb = new StringBuilder();
+        if (rooms > 0)  sb.append(" AND rooms = " + rooms);
+        if (price > 0)  sb.append(" AND price <= " + price);
+        if (sb.length() > 0) {
+            sb.delete(0, 4).insert(0, " WHERE");
+        }
+
+        String sql = "SELECT * FROM " + DB_TABNAME + sb;
 
         PreparedStatement pst = null;
         ResultSet rs = null;
         try {
             pst = conn.prepareStatement(sql);
-            if (rooms > 0 && price > 0) {
-                pst.setInt(1, rooms);
-                pst.setFloat(2, price);
-            } else if (rooms > 0) {
-                pst.setInt(1, rooms);
-            } else if (price > 0) {
-                pst.setFloat(1, price);
-            }
-
             rs = pst.executeQuery();
 
             while (rs.next()) {
@@ -118,11 +114,12 @@ public class Db {
         ArrayList<String> updates = apart.getUpdated();
         if (updates.isEmpty()) return false;
 
-        String sql = "UPDATE " + DB_TABNAME + " SET ";
+        StringBuilder sb = new StringBuilder();
         for (String property : updates) {
-            sql = sql.concat(property + " = ?, ");
+            sb.append(", " + property + " = ?");
         }
-        sql = sql.substring(0, sql.length() - 2).concat(" WHERE id = ?");
+        sb.delete(0, 2).append(" WHERE id = ?");
+        String sql = "UPDATE " + DB_TABNAME + " SET " + sb;
 
         PreparedStatement pst = null;
         try {
